@@ -6,19 +6,21 @@ app = Quart(__name__)
 
 async def scrape_clean_html(url, wait_selector='body'):
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True, args=["--no-sandbox"])
-        context = await browser.new_context(
+        user_data_dir = "/tmp/playwright"
+        context = await p.chromium.launch_persistent_context(
+            user_data_dir,
+            headless=True,
+            args=["--no-sandbox"],
+            locale="en-US",
+            viewport={'width': 1280, 'height': 800},
             user_agent=(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
                 "Chrome/114.0.0.0 Safari/537.36"
-            ),
-            java_script_enabled=True,
-            locale="en-US",
-            viewport={'width': 1280, 'height': 800}
+            )
         )
 
-        page = await context.new_page()
+        page = context.pages[0] if context.pages else await context.new_page()
         cleaned_content = ""
 
         try:
@@ -40,9 +42,10 @@ async def scrape_clean_html(url, wait_selector='body'):
         except Exception as e:
             print("Scraping error:", e)
         finally:
-            await browser.close()
+            await context.close()
 
         return cleaned_content
+
 
 @app.route('/scrape', methods=['POST'])
 async def scrape_endpoint():
