@@ -35,7 +35,7 @@ async def scrape_clean_html(url, wait_selector='body'):
     cleaned_content = ""
 
     try:
-        await page.goto(url, timeout=60000, wait_until='domcontentloaded')
+        await page.goto(url, timeout=120000, wait_until='domcontentloaded')
         try:
             await page.wait_for_selector(wait_selector, timeout=20000)
         except:
